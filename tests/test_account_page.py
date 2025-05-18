@@ -24,7 +24,7 @@ class TestAccountPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
         main_page.click_account_button()
         expected_result = 'Выход'
 
@@ -43,7 +43,7 @@ class TestAccountPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
         main_page.click_account_button()
         account_page.get_order_history()
         expected_result = urls.ORDER_HISTORY_URL
@@ -64,8 +64,7 @@ class TestAccountPage:
         login_page.user_login(email, password)
         
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
-        account_page.close_modal_for_chrome()
+        account_page.close_browser_modal()
         
         main_page.wait_for_page_load_complete()
         

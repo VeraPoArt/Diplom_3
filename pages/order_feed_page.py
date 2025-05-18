@@ -88,23 +88,23 @@ class OrderFeedPage(BasePage):
 
     @allure.step('Быстро получить данные о заказах в работе без длительного ожидания')
     def get_orders_in_progress_fast(self):
-        try:
-            work_elements = self.driver.find_elements(By.XPATH, '//p[text()="В работе"]/following-sibling::ul/li')
-            
-            for element in work_elements:
-                order_id = element.text.strip()
-                if order_id.isdigit():
-                    return order_id
-                
-            all_numbers = self.driver.find_elements(By.XPATH, '//p[contains(@class, "text_type_digits-default")]')
-            
-            for element in all_numbers:
-                order_id = element.text.strip().lstrip('#')
-                if order_id.isdigit():
-                    return order_id
-        except:
-            pass
+        # Сначала ищем заказы в разделе "В работе"
+        work_elements = self.driver.find_elements(By.XPATH, '//p[text()="В работе"]/following-sibling::ul/li')
         
+        for element in work_elements:
+            order_id = element.text.strip()
+            if order_id.isdigit():
+                return order_id
+        
+        # Если не нашли в разделе "В работе", ищем среди всех числовых элементов на странице
+        all_numbers = self.driver.find_elements(By.XPATH, '//p[contains(@class, "text_type_digits-default")]')
+        
+        for element in all_numbers:
+            order_id = element.text.strip().lstrip('#')
+            if order_id.isdigit():
+                return order_id
+        
+        # Если ничего не нашли, возвращаем "0"
         return "0"
 
     @allure.step('Дождаться обновления счетчика "Выполнено за все время"')

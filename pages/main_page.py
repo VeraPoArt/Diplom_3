@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions
 
 from locators.main_page_locators import MainPageLocators
 from pages.base_page import BasePage
+import data
 
 
 class MainPage(BasePage):
@@ -72,18 +73,26 @@ class MainPage(BasePage):
         buns_element = self.find_element_with_wait(MainPageLocators.SEARCH_BUNS_SECTION)
         self.js_button_click(buns_element)
         
-        source = self.wait_for_element_to_be_clickable(MainPageLocators.SEARCH_FIRST_BUN_IN_CONSTRUCTOR)
-        target = self.wait_for_element_to_be_clickable(MainPageLocators.SEARCH_TARGET_BASKET)
+        # Проверяем, что элементы кликабельны перед взаимодействием
+        self.check_element_is_clickable(MainPageLocators.SEARCH_FIRST_BUN_IN_CONSTRUCTOR)
+        self.check_element_is_clickable(MainPageLocators.SEARCH_TARGET_BASKET)
         
+        # Скроллим к ингредиенту для надежности
+        source = self.find_element_with_wait(MainPageLocators.SEARCH_FIRST_BUN_IN_CONSTRUCTOR)
         self.scroll_into_view_js(source)
         
-        try:
-            actions = ActionChains(self.driver)
-            actions.drag_and_drop(source, target).perform()
-        except:
-            self.js_button_click(source)
-            self.wait_for_element_state_change(source)
-            self.js_button_click(target)
+        # Используем разные методы в зависимости от браузера
+        if data.DRIVER_NAME == data.browser_chrome:
+            # Используем метод move_the_element для Chrome
+            self.move_the_element(MainPageLocators.SEARCH_FIRST_BUN_IN_CONSTRUCTOR, 
+                                MainPageLocators.SEARCH_TARGET_BASKET)
+        elif data.DRIVER_NAME == data.browser_firefox:
+            # Используем метод drag_and_drop_element для Firefox
+            self.drag_and_drop_element(MainPageLocators.SEARCH_FIRST_BUN_IN_CONSTRUCTOR,
+                                    MainPageLocators.SEARCH_TARGET_BASKET)
+        
+        # Даем небольшую паузу для обработки действия
+        time.sleep(1)
 
     @allure.step('Проверить значение счетчика ингредиентов после добавления')
     def check_counter_ingredient_added(self):
@@ -106,7 +115,7 @@ class MainPage(BasePage):
         
         while time.time() - start_time < max_wait_time:
             try:
-                self.wait_for_invisibility_of_element(MainPageLocators.SEARCH_FOR_INVISIBILITY_OF_9999_IN_ORDER_MODAL)
+                self.wait_for_invisibility(MainPageLocators.SEARCH_FOR_INVISIBILITY_OF_9999_IN_ORDER_MODAL)
                 order_id = self.get_text_from_element(MainPageLocators.SEARCH_ORDER_ID_IN_MODAL)
                 if order_id and order_id != "9999":
                     return order_id

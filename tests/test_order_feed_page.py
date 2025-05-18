@@ -42,8 +42,7 @@ class TestOrderFeedPage:
         login_page.user_login(email, password)
 
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
-        account_page.close_modal_for_chrome()
+        account_page.close_browser_modal()
 
         main_page.get_feed()
 
@@ -61,8 +60,7 @@ class TestOrderFeedPage:
             "Не удалось получить корректный ID заказа из модального окна"
 
         main_page.close_new_order_modal()
-        account_page.close_modal_for_ff()
-        account_page.close_modal_for_chrome()
+        account_page.close_browser_modal()
         
         time.sleep(3)
         
@@ -98,7 +96,7 @@ class TestOrderFeedPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
         main_page.get_feed()
         order_feed_page = OrderFeedPage(driver)
         before_order = order_feed_page.get_orders_count_today()
@@ -114,8 +112,7 @@ class TestOrderFeedPage:
             "Не удалось получить корректный ID заказа из модального окна"
         
         main_page.close_new_order_modal()
-        account_page.close_modal_for_ff()
-        account_page.close_modal_for_chrome()
+        account_page.close_browser_modal()
         
         time.sleep(3)
         
@@ -146,7 +143,7 @@ class TestOrderFeedPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
 
         main_page.add_ingredient()
         
@@ -157,8 +154,7 @@ class TestOrderFeedPage:
             "Не удалось получить корректный ID заказа из модального окна"
 
         main_page.close_new_order_modal()
-        account_page.close_modal_for_chrome()
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
 
         time.sleep(5)  
 
@@ -222,13 +218,13 @@ class TestOrderFeedPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
-        account_page.close_modal_for_chrome()
+        account_page.close_browser_modal()
+        account_page.close_browser_modal()
         main_page.wait_for_page_load_complete()
         main_page.make_order()
         main_page.close_new_order_modal()
-        account_page.close_modal_for_ff()
-        account_page.close_modal_for_chrome()
+        account_page.close_browser_modal()
+        account_page.close_browser_modal()
         main_page.wait_for_page_load_complete()
         main_page.close_all_modals()
         main_page.click_account_button()

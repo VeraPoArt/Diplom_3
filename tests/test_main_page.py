@@ -23,7 +23,7 @@ class TestMainPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
         main_page.click_account_button()
         main_page.click_constructor_link()
         expected_result = 'Соберите бургер'
@@ -43,7 +43,7 @@ class TestMainPage:
         login_page = LoginPage(driver)
         login_page.user_login(email, password)
         account_page = AccountPage(driver)
-        account_page.close_modal_for_ff()
+        account_page.close_browser_modal()
         main_page.get_feed()
         order_feed_page = OrderFeedPage(driver)
         expected_result = 'Лента заказов'
@@ -105,6 +105,5 @@ class TestMainPage:
         login_page.user_login(email, password)
         main_page.make_order()
         expected_result = 'идентификатор заказа'
-
         assert main_page.check_order_id_text() == expected_result, \
             "Информация об идентификаторе заказа не отображается после оформления"
