@@ -1,7 +1,7 @@
 import allure
 import time
 
-import data
+from data import DRIVER_NAME, browser_chrome, browser_firefox
 from locators.account_page_locators import AccountPageLocators
 from pages.base_page import BasePage
 
@@ -17,8 +17,7 @@ class AccountPage(BasePage):
         try:
             # Проверяем наличие модального окна
             modal_elements = [
-                AccountPageLocators.SEARCH_MODAL_FF,  # Firefox
-                AccountPageLocators.SEARCH_MODAL_CHROME  # Chrome (если есть отдельный локатор)
+                AccountPageLocators.SEARCH_MODAL_FF  # Firefox
             ]
             
             for modal_locator in modal_elements:
@@ -27,8 +26,7 @@ class AccountPage(BasePage):
                     if modal.is_displayed():
                         # Ищем кнопку закрытия
                         close_buttons = [
-                            AccountPageLocators.SEARCH_MODAL_CLOSE_FOR_FF,
-                            AccountPageLocators.SEARCH_MODAL_CLOSE_BUTTON  # Общий локатор, если есть
+                            AccountPageLocators.SEARCH_MODAL_CLOSE_FOR_FF
                         ]
                         
                         for button_locator in close_buttons:
@@ -36,14 +34,13 @@ class AccountPage(BasePage):
                                 close_button = self.driver.find_element(*button_locator)
                                 if close_button.is_displayed():
                                     self.js_button_click(close_button)
-                                    # Ждем закрытия модального окна
-                                    self.wait_for_modal_closed(self.driver, modal_locator)
+                                    time.sleep(0.5)  # Пауза для стабильности
                                     return  # Успешно закрыли, выходим
                             except:
                                 continue  # Пробуем следующую кнопку
                 except:
                     continue  # Пробуем следующее модальное окно
-                
+            
             # Дополнительный метод для закрытия других типов модальных окон
             self.close_all_modals()
         except Exception as e:

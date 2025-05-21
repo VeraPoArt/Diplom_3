@@ -2,17 +2,23 @@ import pytest
 from selenium import webdriver
 import requests
 import urls
-import data
+from data import (
+    DRIVER_NAME,
+    browser_chrome,
+    browser_firefox,
+    TEST_USER_EMAIL,
+    TEST_USER_PASSWORD
+)
 from helpers import Generator
 
 
-@pytest.fixture(params=[data.browser_chrome, data.browser_firefox])
+@pytest.fixture(params=[browser_chrome, browser_firefox])
 def driver(request):
-    if request.param == data.browser_chrome:
-        data.DRIVER_NAME = data.browser_chrome
+    if request.param == browser_chrome:
+        DRIVER_NAME = browser_chrome
         driver = webdriver.Chrome()
-    elif request.param == data.browser_firefox:
-        data.DRIVER_NAME = data.browser_firefox
+    elif request.param == browser_firefox:
+        DRIVER_NAME = browser_firefox
         driver = webdriver.Firefox()
     driver.maximize_window()
     driver.get(urls.BASE_URL)
@@ -22,9 +28,9 @@ def driver(request):
 
 @pytest.fixture()
 def create_new_user_and_delete():
-    if hasattr(data, 'TEST_USER_EMAIL') and hasattr(data, 'TEST_USER_PASSWORD'):
-        email = data.TEST_USER_EMAIL
-        password = data.TEST_USER_PASSWORD
+    if hasattr(TEST_USER_EMAIL, 'TEST_USER_EMAIL') and hasattr(TEST_USER_PASSWORD, 'TEST_USER_PASSWORD'):
+        email = TEST_USER_EMAIL
+        password = TEST_USER_PASSWORD
     else:
         email = Generator.generate_random_email(5)
         password = Generator.generate_random_string(7)

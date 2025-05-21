@@ -1,10 +1,12 @@
 import allure
 import pytest
+import time
 
 from pages.account_page import AccountPage
 from pages.main_page import MainPage
 from pages.login_page import LoginPage
 from pages.order_feed_page import OrderFeedPage
+from data import TEST_USER_EMAIL, TEST_USER_PASSWORD
 
 
 @allure.epic("Основной функционал приложения")
@@ -31,25 +33,28 @@ class TestMainPage:
         assert main_page.check_constructor_title() == expected_result, \
             "Заголовок страницы конструктора не соответствует ожидаемому"
 
-    @allure.story("Лента заказов")
+    @allure.story("Навигация")
     @allure.severity(allure.severity_level.CRITICAL)
-    @allure.description("Проверка перехода в ленту заказов")
-    @allure.title("Пользователь может перейти в ленту заказов с главной страницы")
-    @pytest.mark.functional
-    def test_click_feed_link(self, driver, create_new_user_and_delete):
-        email, password, _ = create_new_user_and_delete
+    @allure.description("Проверка перехода на страницу ленты заказов")
+    @allure.title("Переход на страницу ленты заказов")
+    @pytest.mark.ui
+    def test_click_feed_link(self, driver):
         main_page = MainPage(driver)
         main_page.click_login_button()
         login_page = LoginPage(driver)
-        login_page.user_login(email, password)
-        account_page = AccountPage(driver)
-        account_page.close_browser_modal()
+        login_page.user_login(TEST_USER_EMAIL, TEST_USER_PASSWORD)
+        
+        # Закрываем все модальные окна
+        main_page.close_all_modals()
+        time.sleep(0.5)
+        
+        # Переходим на страницу ленты заказов
         main_page.get_feed()
+        
+        # Проверяем, что мы на нужной странице
         order_feed_page = OrderFeedPage(driver)
-        expected_result = 'Лента заказов'
-
-        assert order_feed_page.check_feed_title_text() == expected_result, \
-            "Заголовок страницы ленты заказов не соответствует ожидаемому"
+        feed_title = order_feed_page.check_feed_title_text()
+        assert feed_title == "Лента заказов", f"Ожидался заголовок 'Лента заказов', получен '{feed_title}'"
 
     @allure.story("Информация об ингредиентах")
     @allure.severity(allure.severity_level.NORMAL)

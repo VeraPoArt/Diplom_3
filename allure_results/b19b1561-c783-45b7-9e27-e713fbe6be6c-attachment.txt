@@ -1,0 +1,4 @@
+Ошибка при закрытии модального окна: type object 'AccountPageLocators' has no attribute 'SEARCH_MODAL_CHROME'
+Ошибка при клике на элемент: Message: 
+
+Ошибка при закрытии модального окна: type object 'AccountPageLocators' has no attribute 'SEARCH_MODAL_CHROME'

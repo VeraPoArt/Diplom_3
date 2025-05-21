@@ -28,11 +28,20 @@
 
 **Запуск автотестов и создание allure-отчета**
 
->  `$ python -m pytest tests/ -v -k chrome --alluredir=allure_results`
+Запуск в одном браузере:
+> `$ python -m pytest tests/ -v -k chrome --alluredir=allure_results`
+> `$ python -m pytest tests/ -v -k firefox --alluredir=allure_results`
+
+Запуск в обоих браузерах одновременно:
+> `$ python -m pytest tests/ -v -k "chrome or firefox" --alluredir=allure_results`
 
 **Просмотр allure-отчета в браузере**
 
->  `$ allure serve allure_results`
+> `$ allure serve allure_results`
+
+**Просмотр отчета по ссылке**
+
+> http://192.168.1.101:49320/index.html
 
 ## Реализованные тесты
 
@@ -58,5 +67,7 @@
 - Проверка отображения заказов пользователя на странице "Лента заказов"
 - Проверка увеличения счетчиков "Выполнено за все время" и "Выполнено за сегодня"
 - Проверка появления номера заказа в разделе "В работе"
+
+
 
 

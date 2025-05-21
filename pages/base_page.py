@@ -5,6 +5,11 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+
+# Добавляем импорты локаторов
+from locators.main_page_locators import MainPageLocators
+from locators.account_page_locators import AccountPageLocators
 
 class BasePage:
 
@@ -31,8 +36,27 @@ class BasePage:
 
     @allure.step('Клик по элементу')
     def click_to_element(self, locator):
-        WebDriverWait(self.driver, 3).until(expected_conditions.element_to_be_clickable(locator))
-        self.find_element_with_wait(locator).click()
+        """Клик по элементу с обработкой ошибок и повторными попытками"""
+        try:
+            # Проверяем, является ли locator уже WebElement
+            if isinstance(locator, WebElement):
+                element = locator
+            else:
+                element = self.find_element_with_wait(locator)
+            
+            self.scroll_into_view_js(element)
+ #           time.sleep(0.5)  # Возвращаем небольшую паузу для стабильности
+            
+            try:
+                element.click()
+            except:
+                try:
+                    actions = ActionChains(self.driver)
+                    actions.move_to_element(element).click().perform()
+                except:
+                    self.driver.execute_script("arguments[0].dispatchEvent(new MouseEvent('click', {'bubbles': true}));", element)
+        except Exception as e:
+            raise Exception(f"Не удалось кликнуть по элементу {locator}: {str(e)}")
 
     @allure.step('Добавление текста в элемент')
     def add_text_to_element(self, locator, text):
@@ -68,35 +92,138 @@ class BasePage:
     def move_the_element(self, locator_element, locator_target):
         element = self.find_element_with_wait(locator_element)
         target = self.find_element_with_wait(locator_target)
-        action_chains = ActionChains(self.driver)
-        action_chains.drag_and_drop(element, target).perform()
+        
+        # Скроллим к элементам
+        self.scroll_into_view_js(element)
+ #       time.sleep(0.5)
+        self.scroll_into_view_js(target)
+  #      time.sleep(0.5)
+        
+        # Используем JavaScript для drag and drop
+        self.driver.execute_script("""
+            function simulateDragDrop(sourceNode, destinationNode) {
+                var EVENT_TYPES = {
+                    DRAG_START: 'dragstart',
+                    DRAG_ENTER: 'dragenter',
+                    DRAG_OVER: 'dragover',
+                    DROP: 'drop',
+                    DRAG_END: 'dragend'
+                }
+                
+                function createCustomEvent(type) {
+                    var event = new DragEvent(type, {
+                        bubbles: true,
+                        cancelable: true,
+                        dataTransfer: new DataTransfer()
+                    });
+                    return event;
+                }
+                
+                sourceNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_START));
+                destinationNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_ENTER));
+                destinationNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_OVER));
+                destinationNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DROP));
+                sourceNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_END));
+            }
+            
+            simulateDragDrop(arguments[0], arguments[1]);
+        """, element, target)
+        
+        # Ждем завершения действия
+ #       time.sleep(1)
 
     @allure.step('Перетаскивание элемента с одного места на другое')
     def drag_and_drop_element(self, source_locator, target_locator):
         source_element = self.find_element_with_wait(source_locator)
         target_element = self.find_element_with_wait(target_locator)
         
-        actions = ActionChains(self.driver)
-        actions.drag_and_drop(source_element, target_element).perform()
+        # Скроллим к элементам
+        self.scroll_into_view_js(source_element)
+        self.scroll_into_view_js(target_element)
+        
+        # Используем JavaScript для drag and drop
+        self.driver.execute_script("""
+            function simulateDragDrop(sourceNode, destinationNode) {
+                var EVENT_TYPES = {
+                    DRAG_START: 'dragstart',
+                    DRAG_ENTER: 'dragenter',
+                    DRAG_OVER: 'dragover',
+                    DROP: 'drop',
+                    DRAG_END: 'dragend'
+                }
+                
+                function createCustomEvent(type) {
+                    var event = new DragEvent(type, {
+                        bubbles: true,
+                        cancelable: true,
+                        dataTransfer: new DataTransfer()
+                    });
+                    return event;
+                }
+                
+                sourceNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_START));
+                destinationNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_ENTER));
+                destinationNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_OVER));
+                destinationNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DROP));
+                sourceNode.dispatchEvent(createCustomEvent(EVENT_TYPES.DRAG_END));
+            }
+            
+            simulateDragDrop(arguments[0], arguments[1]);
+        """, source_element, target_element)
+        
+        # Ждем завершения действия
         self.wait_for_page_load_complete(timeout=2)
 
     @allure.step('Клик по кнопке для скрытых модальных окон')
     def js_button_click(self, element):
         self.driver.execute_script("arguments[0].click();", element)
         
-    @allure.step('Надежное закрытие всех модальных окон')
+    @allure.step('Закрыть все модальные окна')
     def close_all_modals(self):
-        overlay_elements = self.driver.find_elements(By.CSS_SELECTOR, "[class*='Modal_modal_overlay__']")
-        
-        for overlay in overlay_elements:
-            if overlay.is_displayed():
-                close_buttons = self.driver.find_elements(By.XPATH, 
-                    '//button[contains(@class, "Modal_modal__close") or @class="close-modal-button"]')
-                
-                for button in close_buttons:
-                    self.js_button_click(button)
-                    time.sleep(0.3)
-                    break
+        """Закрыть все модальные окна"""
+        try:
+            # Закрываем модальное окно авторизации, если оно есть
+            try:
+                auth_modal = self.find_element_with_wait(AccountPageLocators.SEARCH_CLOSE_MODAL_BUTTON, timeout=1)
+                if auth_modal:
+                    self.js_button_click(auth_modal)
+                    time.sleep(0.5)
+            except:
+                pass
+
+            # Закрываем модальное окно заказа, если оно есть
+            try:
+                order_modal = self.find_element_with_wait(MainPageLocators.SEARCH_CLOSE_MODAL_BUTTON, timeout=1)
+                if order_modal:
+                    self.js_button_click(order_modal)
+                    time.sleep(0.5)
+            except:
+                pass
+
+            # Закрываем модальное окно браузера, если оно есть
+            try:
+                browser_modal = self.find_element_with_wait(MainPageLocators.SEARCH_BROWSER_MODAL, timeout=1)
+                if browser_modal:
+                    self.js_button_click(browser_modal)
+  #                  time.sleep(0.5)
+            except:
+                pass
+
+            # Дополнительная проверка на наличие модальных окон
+            try:
+                modals = self.driver.find_elements(By.CLASS_NAME, "Modal_modal__content__2Fq_")
+                for modal in modals:
+                    try:
+                        close_button = modal.find_element(By.CLASS_NAME, "Modal_modal__close__2Fq_")
+                        self.js_button_click(close_button)
+    #                    time.sleep(0.5)
+                    except:
+                        pass
+            except:
+                pass
+
+        except Exception as e:
+            print(f"Ошибка при закрытии модальных окон: {str(e)}")
 
     @allure.step('Ожидание определенного URL')
     def wait_for_url_contains(self, url_part, timeout=10):
@@ -106,8 +233,34 @@ class BasePage:
         
     @allure.step('Ожидание стабильности DOM')
     def wait_for_page_load_complete(self, timeout=10):
+        """Ожидание полной загрузки страницы"""
         WebDriverWait(self.driver, timeout).until(
             lambda d: d.execute_script('return document.readyState') == 'complete'
+        )
+
+    @allure.step('Ожидание стабильности элемента')
+    def wait_for_element_stable(self, element, timeout=5):
+        """Ожидание стабильности элемента (прекращение анимаций)"""
+        initial_location = element.location
+        initial_size = element.size
+        
+        def element_is_stable(driver):
+            current_location = element.location
+            current_size = element.size
+            return (current_location == initial_location and 
+                    current_size == initial_size)
+        
+        WebDriverWait(self.driver, timeout).until(element_is_stable)
+
+    @allure.step('Ожидание завершения анимации')
+    def wait_for_animation_complete(self, element, timeout=5):
+        """Ожидание завершения CSS анимаций"""
+        WebDriverWait(self.driver, timeout).until(
+            lambda d: d.execute_script("""
+                const element = arguments[0];
+                const style = window.getComputedStyle(element);
+                return style.animation === 'none' && style.transition === 'none';
+            """, element)
         )
         
     @allure.step('Ожидание появления элемента в DOM')

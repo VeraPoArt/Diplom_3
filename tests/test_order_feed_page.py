@@ -62,13 +62,10 @@ class TestOrderFeedPage:
         main_page.close_new_order_modal()
         account_page.close_browser_modal()
         
-        time.sleep(3)
         
         main_page.get_feed()
         
-        max_wait_time = 20  
-        polling_interval = 1
-        start_time = time.time()
+ 
         after_order = before_order
         
         for _ in range(5):
@@ -79,7 +76,6 @@ class TestOrderFeedPage:
             if int(after_order) > int(before_order):
                 break
             
-            time.sleep(2)
         
         assert int(before_order) < int(after_order), \
             f"Счетчик 'Выполнено за все время' не увеличился после создания заказа. Было: {before_order}, стало: {after_order}"
@@ -114,7 +110,6 @@ class TestOrderFeedPage:
         main_page.close_new_order_modal()
         account_page.close_browser_modal()
         
-        time.sleep(3)
         
         main_page.get_feed()
         
@@ -126,7 +121,6 @@ class TestOrderFeedPage:
             if int(after_order) > int(before_order):
                 break
             
-            time.sleep(2)
         
         assert int(before_order) < int(after_order), \
             f"Счетчик 'Выполнено за сегодня' не увеличился после создания заказа. Было: {before_order}, стало: {after_order}"
@@ -156,13 +150,11 @@ class TestOrderFeedPage:
         main_page.close_new_order_modal()
         account_page.close_browser_modal()
 
-        time.sleep(5)  
 
         main_page.get_feed()
         
         order_feed_page = OrderFeedPage(driver)
         order_feed_page.wait_for_page_load_complete()
-        time.sleep(3)
 
         max_attempts = 12  
         found_order = False
@@ -196,7 +188,6 @@ class TestOrderFeedPage:
                     break
             
           
-            time.sleep(2 + attempt)
         
         if found_order:
             modal_id_stripped = id_in_modal.lstrip('0')
@@ -221,20 +212,53 @@ class TestOrderFeedPage:
         account_page.close_browser_modal()
         account_page.close_browser_modal()
         main_page.wait_for_page_load_complete()
+        
+        # Добавляем ингредиент перед созданием заказа
+        main_page.add_ingredient()
+        
         main_page.make_order()
+        
+        # Ждем ID заказа из модального окна
+        id_in_modal = main_page.wait_and_get_order_id()
+        assert id_in_modal and id_in_modal.isdigit() and id_in_modal != "9999", \
+            "Не удалось получить корректный ID заказа из модального окна"
+        
         main_page.close_new_order_modal()
         account_page.close_browser_modal()
         account_page.close_browser_modal()
+        
+
+        
         main_page.wait_for_page_load_complete()
         main_page.close_all_modals()
         main_page.click_account_button()
+        
+        
         account_page.get_order_history()
-        history_order_id = account_page.get_order_id_in_history()
+        
+        # Добавляем несколько попыток получения ID заказа из истории
+        max_attempts = 5
+        history_order_id = None
+        
+        for attempt in range(max_attempts):
+            try:
+                history_order_id = account_page.get_order_id_in_history()
+                if history_order_id:
+                    break
+            except:
+                pass
+            time.sleep(2)
+            driver.refresh()
+        
         assert history_order_id, "В истории заказов не найден ни один заказ"
+        
         main_page.close_all_modals()
         main_page.get_feed()
+        
+        
         order_feed_page = OrderFeedPage(driver)
         feed_order_id = order_feed_page.check_order_id_in_feed()
+        
         assert feed_order_id, "В ленте заказов не найден ни один заказ"
         assert len(str(int(history_order_id))) > 5, "Идентификатор заказа в истории недействителен"
         assert len(str(int(feed_order_id))) > 5, "Идентификатор заказа в ленте недействителен"

@@ -10,9 +10,22 @@ from locators.order_feed_page_locators import OrderFeedPageLocators
 
 class OrderFeedPage(BasePage):
 
-    @allure.step('Проверить нахождение на странице ленты заказов')
+    @allure.step('Проверить заголовок страницы ленты заказов')
     def check_feed_title_text(self):
-        return self.get_text_from_element(OrderFeedPageLocators.SEARCH_FEED_TITLE_TEXT)
+        try:
+            # Добавляем явное ожидание загрузки страницы
+            self.wait_for_page_load_complete()
+            time.sleep(0.5)  # Небольшая пауза для стабильности
+            
+            # Пробуем найти заголовок
+            title = self.get_text_from_element(OrderFeedPageLocators.SEARCH_FEED_TITLE_TEXT)
+            return title
+        except:
+            # Если не удалось найти заголовок, пробуем обновить страницу
+            self.driver.refresh()
+            self.wait_for_page_load_complete()
+            time.sleep(0.5)
+            return self.get_text_from_element(OrderFeedPageLocators.SEARCH_FEED_TITLE_TEXT)
 
     @allure.step('Кликнуть на заказ для открытия модального окна с деталями заказа')
     def click_to_order(self):

@@ -1,6 +1,6 @@
 import random
 import string
-import data
+from data import DRIVER_NAME, browser_chrome, browser_firefox
 
 
 class Generator:
@@ -21,9 +21,9 @@ class Generator:
             digits = ''.join(random.choice(characters) for _ in range(length))
             return f"burger_test_{digits}@burgerhouse.ru"
         else:
-            return data.TEST_USER_EMAIL
+            return DRIVER_NAME.TEST_USER_EMAIL
 
     @staticmethod
     def get_test_password():
         """Возвращает тестовый пароль"""
-        return data.TEST_USER_PASSWORD
+        return DRIVER_NAME.TEST_USER_PASSWORD
